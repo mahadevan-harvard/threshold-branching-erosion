@@ -32,8 +32,8 @@ class FigureSettings:
 
 		elif journalName == 'PhysicalReview':
 			# Sizes
-			singleWidth = 86.00 # [mm]
-			doubleWidth = 172.00 # [mm]
+			singleWidth = 85.00 # [mm]
+			doubleWidth = 170.00 # [mm]
 
 			# Specifications for generic text	 
 			font = {'family' : 'serif',
@@ -47,16 +47,53 @@ class FigureSettings:
 			# Note: amsmath does not have cursive sub/superscript. (see plot)
 			preambleSpecs = r'\usepackage{newtxtext} \usepackage{newtxmath} \usepackage{amsmath}'
 
-			mpl.rcParams['xtick.major.pad']='4'	
-			mpl.rcParams['xtick.minor.pad']='4'	
-			mpl.rcParams['ytick.major.pad']='1'	
-			mpl.rcParams['ytick.minor.pad']='1'	
-			mpl.rcParams['axes.labelpad']='1'
-			mpl.rcParams['legend.fontsize']='6'	
-			mpl.rcParams['legend.title_fontsize']='6'	
-			mpl.rcParams['legend.labelspacing']='0.3'
-			mpl.rcParams["axes.axisbelow"] = False
+			mpl.rcParams['xtick.major.pad']= 3	
+			mpl.rcParams['xtick.minor.pad']= 3	
+			mpl.rcParams['ytick.major.pad']= 2	
+			mpl.rcParams['ytick.minor.pad']= 2	
+			mpl.rcParams['axes.labelpad']= 0.5
+			mpl.rcParams['legend.fontsize']= 6	
+			mpl.rcParams['legend.title_fontsize']= 6	
+			mpl.rcParams['legend.labelspacing']= 0.3
+			mpl.rcParams['legend.borderaxespad']= 1
+
+		elif journalName == 'Movie':
+			# Sizes
+			singleWidth = 85.00 # [mm]
+			doubleWidth = 170.00 # [mm]
+
+			# Specifications for generic text	 
+			font = {'family' : 'Andale Mono',
+    	    		'size'   : 7
+				   }
+
+			# Specifications for latex-based text 
+			# Specifications for latex-based text 
+			# set the normal latex text font here # load up the sansmath so that math -> helvet	
+			# Note: amsmath does not have cursive sub/superscript. (see plot)
+			preambleSpecs = r'\usepackage{arev} \usepackage{amsmath}'
+
+			mpl.rcParams['xtick.major.pad']= 2	
+			mpl.rcParams['xtick.minor.pad']= 2	
+			mpl.rcParams['ytick.major.pad']= 2	
+			mpl.rcParams['ytick.minor.pad']= 2	
+			mpl.rcParams['axes.labelpad']= 2
+			mpl.rcParams['legend.fontsize']= 6	
+			mpl.rcParams['legend.title_fontsize']= 6	
+			mpl.rcParams['legend.labelspacing']= 0.3
 			mpl.rcParams['legend.borderaxespad']='1'
+
+			# Axis and label colors
+			mpl.rcParams['axes.edgecolor'] = 'white'
+			mpl.rcParams['axes.labelcolor'] = 'white'
+			mpl.rcParams['xtick.color'] = 'white'
+			mpl.rcParams['ytick.color'] = 'white'
+			mpl.rcParams['text.color'] = 'white'  
+
+			# Background colors
+			mpl.rcParams['figure.facecolor'] = 'black'
+			mpl.rcParams['axes.facecolor'] = 'black'
+
 
 		elif journalName == 'SoftMatter':
 			# Sizes
@@ -85,33 +122,6 @@ class FigureSettings:
 			mpl.rcParams['legend.labelspacing']='0.3'
 			mpl.rcParams["axes.axisbelow"] = False	
 
-		elif journalName == 'Thesis':
-			# Sizes
-			singleWidth = 125.00/2.0 # [mm]
-			doubleWidth = 125.00 # [mm]
-
-			# Specifications for generic text	 
-			font = {'family' : 'sans-serif',
-    	  		    'serif' : 'Helvetica',
-    	    		'size'   : 8
-				   }
-
-			# Specifications for latex-based text 
-			preambleSpecs =  [
-						 	  r'\usepackage{arev}',    # set the normal latex text font here
-						 	  r'\usepackage{amsmath}',  # load up the sansmath so that math -> helvet
-							]  							# Note: amsmath does not have cursive sub/superscript. (see plot)
-
-			mpl.rcParams['xtick.major.pad']='4'	
-			mpl.rcParams['xtick.minor.pad']='4'	
-			mpl.rcParams['ytick.major.pad']='1'	
-			mpl.rcParams['ytick.minor.pad']='1'	
-			mpl.rcParams['axes.labelpad']='1'
-			mpl.rcParams['legend.fontsize']='6'	
-			mpl.rcParams['legend.title_fontsize']='6'	
-			mpl.rcParams['legend.labelspacing']='0.3'
-			mpl.rcParams["axes.axisbelow"] = False
-			mpl.rcParams['legend.borderaxespad']='1'
 		else:
 			print("The settings for this journal are not specified.")
 			return
@@ -133,14 +143,30 @@ class FigureSettings:
 		elif mode=='inch':
 			self.figureHeight = height
 
-def set_box(ax):
+def set_box(ax, halfstyle=False, colorbar=False):
 	""" 
 	Format the box around the graph
 	"""
-	ax.tick_params('both', left=True,right=True,bottom=True,top=True,direction='in',width=0.5,length=6,which='major')
-	ax.tick_params('both', left=True,right=True,bottom=True,top=True,direction='in',width=0.5,length=3,which='minor')
-	for axis in ['top','bottom','left','right']:
-	    ax.spines[axis].set_linewidth(0.5)
+	if colorbar:
+		ax.tick_params('both', left=False,right=True,bottom=True,top=False,direction='out',width=.5,length=3,which='major')
+		ax.tick_params('both', left=False,right=True,bottom=True,top=False,direction='out',width=.5,length=1.5,which='minor')
+		for axis in ['bottom','left']:
+			ax.spines[axis].set_visible(False)
+		for axis in ['top', 'right']:
+			ax.spines[axis].set_visible(False)
+	elif halfstyle:
+		ax.tick_params('both', left=True,right=False,bottom=True,top=False,direction='out',width=.5,length=3,which='major')
+		ax.tick_params('both', left=True,right=False,bottom=True,top=False,direction='out',width=.5,length=1.5,which='minor')
+		for axis in ['bottom','left']:
+			ax.spines[axis].set_linewidth(.5)
+		for axis in ['top', 'right']:
+			ax.spines[axis].set_visible(False)
+	else:	
+		ax.tick_params('both', left=True,right=True,bottom=True,top=True,direction='in',width=.5,length=3,which='major')
+		ax.tick_params('both', left=True,right=True,bottom=True,top=True,direction='in',width=.5,length=1.5,which='minor')
+		for axis in ['top','bottom','left','right']:
+			ax.spines[axis].set_linewidth(0.5)
+
 
 def set_legend(ax,pos=1,bbox=None,htextpad=1.0):
 	""" 

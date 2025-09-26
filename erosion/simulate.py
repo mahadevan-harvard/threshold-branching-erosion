@@ -20,7 +20,6 @@
 #
 #########################################################################################
 
-
 import time
 import os
 
@@ -31,12 +30,10 @@ from scipy.special import erf
 from mpi4py import MPI
 import dolfinx as dx
 import ufl
-from dolfinx.fem.petsc import LinearProblem
 
-from dolfinx.fem import form, set_bc
-from dolfinx.fem.petsc import assemble_matrix, assemble_vector
+from dolfinx.fem import form
+from dolfinx.fem.petsc import LinearProblem, assemble_matrix, assemble_vector
 from petsc4py import PETSc
-from dolfinx import fem
 
 #########################################################################################
 #   Functions
@@ -75,14 +72,6 @@ class FEMConfig:
 		self.bc4 = None
 		self.bc5 = None
 		self.bc6 = None
-
-# class NeumannProblem:
-# 	def __init__(self, solver, A, b, p_sol, nullspace):
-# 		self.solver = solver
-# 		self.A = A
-# 		self.b = b
-# 		self.p_sol = p_sol
-# 		self.nullspace = nullspace
 
 class NeumannProblem:
 	def __init__(self, V, a_form, L_form, nullspace):
@@ -154,38 +143,6 @@ def generate_phi0(phi_0, sigma_phi, zeta, config, seed=42):
 		
 	# Make sure that the initial state for phi is in [0,1] everywhere (such that it is physical).
 	return np.clip(phi, 0, 1)
-
-def gaussian_feather_mask(dist, radius, sigma):
-	"""
-	Returns a smooth radial mask using the Gaussian error function.
-	"""
-	return 0.5 * (1 - erf((dist - radius) / (np.sqrt(2) * sigma)))
-
-def apply_half_circle_patch(phi, config, phi_patch=0.0, radius=1.0, sigma=0.2, side="bottom"):
-	"""
-	Applies a half-circle patch with a smooth transition (like feathering) to phi.
-	Inside radius: phi sim phi_patch
-	Outside: phi unchanged
-	Transition: smooth interpolation over width sigma
-	"""
-	nx, ny = config.nx, config.ny
-	h = config.grid_spacing
-
-	x = np.linspace(0, nx*h, nx)
-	y = np.linspace(0, ny*h, ny)
-	X, Y = np.meshgrid(x, y, indexing='ij')
-
-	cx = (nx * h) / 2
-	cy = 0 if side == "bottom" else ny * h
-
-	dist = np.sqrt((X - cx)**2 + (Y - cy)**2)
-
-	m = gaussian_feather_mask(dist, radius, sigma)
-
-	# Blend field: smooth transition from phi_patch to phi
-	phi = phi * (1 - m) + phi_patch * m
-
-	return phi
 
 def generate_s(V, nx, ny, indices):
 	"""
@@ -409,7 +366,7 @@ def get_p(result, config):
 
 	return p, dp_dx0, dp_dx1
 
-def run_sim(phi0, t_final, xi, omega, varphi_star, config, boundary_function, log_file, save_dt=1, dt_max=1, e_max=1e-4):
+def run_sim(phi0, t_final, xi, omega, varphi_star, config, boundary_function, log_file, save_dt=1, dt_max=1, e_max=1e-4, setter_function=None):
 	"""
 	Run erosion simulation with adaptive timestep:
 	- Advances phi using ReLU-based erosion model.
@@ -417,7 +374,6 @@ def run_sim(phi0, t_final, xi, omega, varphi_star, config, boundary_function, lo
 	- Adaptive timestep control based on error e (p.12 of the SI of the erosion paper).
 	"""
 	# --- Adaptive time-stepping parameters ---
-	#e_max = 1E-6 # Error tolerance for timestep control # Used to be 1e-4
 	r_dec, r_inc = 0.9, 1.1 # Timestep reduction/increase factors
 	r_min, r_max = 1/3, 3 # Timestep bounds
 	dt = 0.001  # Initial timestep
@@ -430,6 +386,11 @@ def run_sim(phi0, t_final, xi, omega, varphi_star, config, boundary_function, lo
 	extent = int(3 * xi / config.grid_spacing)
 	B_m = generate_B(xi, config.grid_spacing)
 
+	# --- Check setter for internal structure ---
+	if setter_function is None:
+		def setter_function(phi):
+			return phi
+		
 	# --- Simulation state initialization ---
 	t, n = 0, 0
 	phi = np.copy(phi0)
@@ -440,7 +401,7 @@ def run_sim(phi0, t_final, xi, omega, varphi_star, config, boundary_function, lo
 	# --- Prepare data storage & logging ---
 	save_count = 0
 	save_time = np.arange(0, t_final+save_dt, save_dt)
-	Nsave = len(save_time) # np.floor(t_end / dt / Nstep).astype(int) + 1
+	Nsave = len(save_time)
 	(W,L) = phi0.shape
 	phi_array = np.zeros([Nsave, W, L])
 	flux_array = np.zeros([Nsave, W, L])	
@@ -471,15 +432,19 @@ def run_sim(phi0, t_final, xi, omega, varphi_star, config, boundary_function, lo
 
 		# --- Compute erosion rate f from pressure gradients ---
 		varphi = convolve_optimized(phi, B_m, extent)
+		varphi = setter_function(varphi)
 		gradP2 = dp_dx0**2 + dp_dx1**2
 		f = np.maximum(0, gradP2 - psi(varphi, omega, varphi_star))
 
 		# --- Adaptive time-stepping loop ---
 		while True:
+
 			# Predictor step for phi (time = t + dt, and time = t + 0.5dt)
 			dtf = dt * f
 			phi_np1 = phi * (1 - dtf)
 			phi_np12 = phi * (1 - 0.5 * dtf)		
+			phi_np1 = setter_function(phi_np1)
+			phi_np12 = setter_function(phi_np12)
 
 			# Reject timestep if phi becomes unphysical
 			if np.any(phi_np12 < 0):
@@ -487,17 +452,19 @@ def run_sim(phi0, t_final, xi, omega, varphi_star, config, boundary_function, lo
 			else:
 				# Recompute pressure at t + dt/2
 				dq1, dq2, dq3, dq4, dq5, dq6 = boundary_function(t + dt/2) 
-				result, problem, config = calculate_p(problem, phi_np12, dq1, dq2, dq3, dq4, dq5, dq6, config) # @@@ flag, used to just be phi, but it should be phi_np12
+				result, problem, config = calculate_p(problem, phi_np12, dq1, dq2, dq3, dq4, dq5, dq6, config)
 				p_np12, dp_dx0_np12, dp_dx1_np12 = get_p(result, config)
 
 				# Recompute erosion rate at t + dt/2
 				varphi_p12 = convolve_optimized(phi_np12, B_m, extent)
+				varphi_p12 = setter_function(varphi_p12)
 				gradP2_np12 = dp_dx0_np12**2 + dp_dx1_np12**2
 				f_np12 = np.maximum(0, gradP2_np12 - psi(varphi_p12, omega, varphi_star))
 
 				# Corrector step for phi
 				dtf_np12 = dt * f_np12
 				phihat_1 = phi_np12 * (1 - 0.5*dtf_np12)
+				phihat_1 = setter_function(phihat_1)
 				e = np.sqrt(1/(config.nx*config.ny*(e_max)**2) * np.sum((phi_np1 - phihat_1)**2))
 
 			# --- Check timestep acceptance ---
@@ -507,7 +474,8 @@ def run_sim(phi0, t_final, xi, omega, varphi_star, config, boundary_function, lo
 			else:
 				# Final corrector step (Richardson extrapolation): combine predictor & corrector estimates
 				phi_np1 = 2*phihat_1 - phi_np1
-				if np.any(phi_np1) < 0:
+				phi_np1 = setter_function(phi_np1)
+				if np.any(phi_np1 < 0):
 					dt = r_dec*dt
 					e = 100000
 				else:
@@ -574,16 +542,6 @@ def generate_config(nx, bx, epsilon_lh, epsilon_rh):
 	return config
 
 def fem_initialize_pressure(phi, config):
-	"""  
-	This is the function that executes the FEM in each step.
-	To improve the numerical stability I implemented a staggered grid the following way (see p.8 in SI of erosion paper): 
-		1) in fem_step() we determine the pressure p_res on the nodes of the grid. 
-		2) in get_p_information() we calculate the spatial derivatives dp_dx0, dp_dx1, 
-		   but we calculate them such that they represent the derivatives of p on the center of each facet of the grid.
-		3) we use the gradient of p that we calculated this way to determine phi on the center of each facet (by an Euler-forward step) in the while-loop.
-		4) at the beginning of fem_step we extrapolate phi from the cell centers to the cell corners, such that we can properly calculate p.
-	Empirically this has slightly improved the stability of my code.
-	"""
 
 	# Construct phi_arrays
 	config.phi_v = dx.fem.Function(config.V)

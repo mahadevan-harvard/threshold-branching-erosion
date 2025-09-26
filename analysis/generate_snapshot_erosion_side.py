@@ -60,13 +60,13 @@ ax = plt.subplot()
 ##########################################
 # Retrieve data
 ##########################################
-config = "exponeital_202505192117"#"homogeneous_202505141618"#"homogeneous_202505141555"
+config = "side_202509041902"#"homogeneous_202505141618"#"homogeneous_202505141555"
 #config = "homogeneous_202505141555"
-Q = 0.004#1.0 
-T = 2.1#10.0
-a = 18.5#0.15
+Q = 1.0# 0.004#
+T = 10.0#2.1#
+a = 0.15#18.5#
 
-input_file = f'./DATA/{config}/F_{Q:g}_T_{T:g}_a_{a:g}_b_0/data.npz'
+input_file = f'./DATA/{config}/F_{Q}_T_{T:g}_a_{a:g}_b_0/data.npz'
 #input_file = f'./DATA/erosion/{config}/F_{Q:g}_T_{T:.1f}_V_001/data.npz'
 output_file = f'./Results/{config}_E_F_{Q:g}_T_{T:g}_a_{a:g}_b_0.png'
 data = np.load(input_file)

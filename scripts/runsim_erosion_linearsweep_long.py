@@ -59,7 +59,7 @@ class BoundaryFlux:
 		if t/self.t_rampup < 1.0:
 			factor = t/self.t_rampup
 		else:
-			factor = 1.0 #np.sin(2*np.pi*t/self.t_rampup)
+			factor = 1.0
 
 		# Boundary flux arrays
 		dq3 = +self.q_max_lh * factor * np.ones((self.config.nx + 1, self.config.ny + 1))  # Left boundary flux
@@ -74,8 +74,8 @@ class BoundaryFlux:
 if __name__ == "__main__":
 
 	# PARAMETERS
-	nx = 250                 # Specify grid size to be n x n. # Might want to change to nx and ny
-	bx = 10                 # Boundary length of quadratic domain, so the domain will have shape [0,bx] x [0,bx].
+	nx = 250                 # Specify grid size to be nx x ny.
+	bx = 10                 # Boundary length of quadratic domain.
 	yfac = 4
 	grid_spacing = bx/nx
 
@@ -91,13 +91,13 @@ if __name__ == "__main__":
 
 	xi = 0.05               # communication length (mechancics)
 	omega = 8               # threshold sharpness
-	varphi_star = 0.8          # threshold transition point -> Is this not per definition the same as phi_0 for a stable config?
+	varphi_star = 0.8          # threshold transition point
 	t_final = 25           # Simulation time
 	save_dt = 0.125
 
 	# Sweep parameters
-	F_array = np.array([2.0])#0.2,0.4,0.6,0.8,1.0,1.2])	# Flux
-	T_array = np.array([10.0])#5,7,9,11,13,15])	# Ramp-up time
+	F_array = np.array([2.0]) # Flux
+	T_array = np.array([10.0])	# Ramp-up time
 	V_array = np.array([1])
 
 	# STORAGE
@@ -115,7 +115,7 @@ if __name__ == "__main__":
 	domain = dx.mesh.create_rectangle(MPI.COMM_WORLD, [np.array([0, 0]), np.array([bx, by])], [nx, ny], dx.mesh.CellType.quadrilateral)
 	V = dx.fem.functionspace(domain, ("Lagrange", 1))
 
-	# Generate indices for transformation from 2D nump array to vector -> must be possible to do this in a more transpartent way 
+	# Generate indices for transformation from 2D nump array to vector
 	coords = domain.geometry.x[:,:2]
 	indices = np.lexsort((coords[:,1], coords[:,0]))  
 
@@ -128,7 +128,7 @@ if __name__ == "__main__":
 	for V in V_array:
 
 		# INITIALIZE PHI
-		seed = 42#int(time.time() * 1e6) % (2**32)
+		seed = 42 #int(time.time() * 1e6) % (2**32)
 		phi0 = fb.generate_phi0(phi_0, sigma_phi, zeta, config, seed=seed)
 
 		for F in F_array:

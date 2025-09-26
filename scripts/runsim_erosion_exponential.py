@@ -17,7 +17,6 @@ import dolfinx as dx
 
 from erosion import simulate as fb
 
-import time
 import os
 from datetime import datetime
 
@@ -58,7 +57,7 @@ class NonlinearFluxRamp:
 		- dq1, dq2, dq3, dq4: Boundary fluxes for top, bottom, left, and right
 		"""
 		if t < self.t_max:
-			factor = np.exp(t/self.t_rampup) #self._get_flux(t, low, high, self.broad_low, self.broad_high)
+			factor = np.exp(t/self.t_rampup)
 		else:
 			factor = 0.0
 
@@ -77,7 +76,7 @@ class NonlinearFluxRamp:
 if __name__ == "__main__":
 
 	# PARAMETERS
-	nx = 250                 # Specify grid size to be n x n. # Might want to change to nx and ny
+	nx = 250                 # Specify grid size to be n x n.
 	bx = 10                 # Boundary length of quadratic domain, so the domain will have shape [0,bx] x [0,bx].
 	grid_spacing = bx/nx
 
@@ -93,7 +92,7 @@ if __name__ == "__main__":
 
 	xi = 0.025               # communication length (mechancics)
 	omega = 8               # threshold sharpness
-	varphi_star = 0.8          # threshold transition point -> Is this not per definition the same as phi_0 for a stable config?
+	varphi_star = 0.8          # threshold transition point
 	
 	t_final = 25           # Simulation time
 	save_dt = 0.125
@@ -118,7 +117,7 @@ if __name__ == "__main__":
 	domain = dx.mesh.create_rectangle(MPI.COMM_WORLD, [np.array([0, 0]), np.array([bx, by])], [nx, ny], dx.mesh.CellType.quadrilateral)
 	V = dx.fem.functionspace(domain, ("Lagrange", 1))
 
-	# Generate indices for transformation from 2D nump array to vector -> must be possible to do this in a more transpartent way 
+	# Generate indices for transformation from 2D nump array to vector
 	coords = domain.geometry.x[:,:2]
 	indices = np.lexsort((coords[:,1], coords[:,0]))  
 
@@ -128,7 +127,7 @@ if __name__ == "__main__":
 	config = fb.FEMConfig(V, s, ds, nx, ny, grid_spacing, indices, epsilon_lh, epsilon_rh)
 
 	# INITIALIZE PHI
-	seed = 42
+	seed = 486522830 #int(time.time() * 1e6) % (2**32) # Either hard-code or based on current time
 	phi0 = fb.generate_phi0(phi_0, sigma_phi, zeta, config, seed=seed)
 
 	# PARAMETER_SWEEP

@@ -74,29 +74,29 @@ class BoundaryFlux:
 if __name__ == "__main__":
 
 	# PARAMETERS
-	nx = 250                 # Specify grid size to be n x n. # Might want to change to nx and ny # -> 1024
+	nx = 250                 # Specify grid size to be n x n.
 	bx = 10                 # Boundary length of quadratic domain, so the domain will have shape [0,bx] x [0,bx].
 	grid_spacing = bx/nx
 
 	ny = nx
 	by = bx
 
-	epsilon_lh = 0.2        # half-width source # -> 0.05
+	epsilon_lh = 0.2        # half-width source 
 	epsilon_rh = 5.0        # half-width sink
 
 	phi_0 = 0.8             # mean of the Gaussian noise
 	sigma_phi = 0.02        # variance of the Gaussian noise
-	zeta = 0.15             # correlation length (structural) # -> 0.1
+	zeta = 0.15             # correlation length (structural)
 
 	xi = 0.05               # communication length (mechancics)
 	omega = 8               # threshold sharpness
-	varphi_star = 0.8          # threshold transition point -> Is this not per definition the same as phi_0 for a stable config?
+	varphi_star = 0.8       # threshold transition point 
 	t_final = 100           # Simulation time
 	save_dt = 10.0
 
 	# Sweep parameters
-	F_array = np.array([0.5])#0.2,0.4,0.6,0.8,1.0,1.2])	# Flux
-	T_array = np.array([10.0])#5,7,9,11,13,15])	# Ramp-up time
+	F_array = np.array([0.5])	# Flux
+	T_array = np.array([10.0])	# Ramp-up time
 	V_array = np.array([1])
 
 	# STORAGE
@@ -114,7 +114,7 @@ if __name__ == "__main__":
 	domain = dx.mesh.create_rectangle(MPI.COMM_WORLD, [np.array([0, 0]), np.array([bx, by])], [nx, ny], dx.mesh.CellType.quadrilateral)
 	V = dx.fem.functionspace(domain, ("Lagrange", 1))
 
-	# Generate indices for transformation from 2D nump array to vector -> must be possible to do this in a more transpartent way 
+	# Generate indices for transformation from 2D nump array to vector
 	coords = domain.geometry.x[:,:2]
 	indices = np.lexsort((coords[:,1], coords[:,0]))  
 

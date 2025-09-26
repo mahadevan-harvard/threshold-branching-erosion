@@ -1,22 +1,16 @@
 import numpy as np
-
 import scipy.ndimage as ndi
 from scipy.optimize import minimize_scalar
 
 from skimage import measure
 from skimage import morphology
 
-import frangiblebranching_ns as fb
-
-import matplotlib.pyplot as plt
-from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
-							   AutoMinorLocator, LogLocator)
-
-import PlotLibrary as plotlib
+from erosion import simulate as fb
 
 ##############################################################################################
 # FUNCTIONS 
 ##############################################################################################
+
 
 #Code for robustness
 def remove_isolated_islands(binary_image, min_size=1):
@@ -102,51 +96,6 @@ def maxhole(phi_array):
 	#x_max = 0.2
 	maxnum = count_holes(phi_array,x_max)
 	
-# 	a = x_max
-# 	phi = np.copy(phi_array)
-# 	phi[phi < a] = 0
-# 	phi[phi > a] = 1
-
-# 	# labels, num_islands = ndi.label(phi)
-# 	# fig,ax = plt.subplots()
-# 	# ax.imshow(labels,cmap="rainbow")
-# 	# plt.show()
-
-# 	print(a)
-# 	binary_optimal = remove_disconnected_channels(1-phi)
-# 	cleaned = morphology.remove_small_objects(np.logical_not(binary_optimal), min_size=10)
-
-# 	labeled_components = measure.label(cleaned, connectivity=1)
-
-# 	# Find unique component labels
-# 	unique_labels = np.unique(labeled_components)
-# 	unique_labels = unique_labels[unique_labels != 0]  # Exclude background
-
-# 	# Create a mask of boundary pixels
-# 	boundary_mask = np.zeros_like(labeled_components, dtype=bool)
-# 	boundary_mask[0, :] = boundary_mask[-1, :] = True  # Top & bottom edges
-# #	boundary_mask[:, 0] = boundary_mask[:, -1] = True  # Left & right edges
-# 	boundary_mask[:, 0] = True  # Left & right edges
-
-# 	# Find labels that touch the boundary
-# 	boundary_labels = np.unique(labeled_components[boundary_mask])
-# 	boundary_labels = boundary_labels[boundary_labels != 0]  # Remove background
-
-# 	# Count components
-# 	total_components = len(unique_labels)
-# 	non_boundary_components = total_components - len(boundary_labels)
-# 	print(non_boundary_components)
-
-# 	# Assign new labels: 1 if touching boundary, 2 otherwise
-# 	new_labels = np.where(np.isin(labeled_components, boundary_labels), -1, labeled_components)
-# 	new_labels[labeled_components == 0] = 0
-# 	fig,ax = plt.subplots()
-# 	ax.imshow(new_labels,cmap="rainbow")
-# 	plt.show()
-
-# 	phi = 1 - phi
-# 	phi = remove_isolated_islands(phi)
-	
 	return maxnum
 
 ##############
@@ -170,11 +119,8 @@ def remove_disconnected_channels(binary_image):
 
 	return filtered_binary.astype(np.uint8)
 
-#####################
-# Code for efficiency
-#####################
+# Code for efficiency 
 
-#  
 def efficiency_ce(phi_array, p, dpdx, dpdy, bx, deltaP):
 	phi = np.clip(phi_array,a_min=0.1,a_max=1)
 	# I want to calculate the conductivity.
@@ -214,38 +160,16 @@ def extract_parameters(parameter_file, keys, default_values=None):
 	return parameters
 
 ##############################################################################################
-# Figure Settings
+# Retrieve data
 ##############################################################################################
 
-# Plot Figure settings
-figSpecs = plotlib.FigureSettings()
-figSpecs.set_journal('PhysicalReview')
-figSpecs.set_figureHeight(45)
-
-# What is the size of this figure relative to the journal specs
-xFraction = 1/3
-yFraction = 1.0
-
-width = xFraction * figSpecs.doubleColumn
-height = yFraction * figSpecs.figureHeight
-
-# Define colormaps
-cmap = plt.cm.viridis # plt.cm.inferno
-
-fig = plt.figure(figsize=(width, height))
-ax = plt.subplot()
-
-##############################################################################################
-# CORE 
-##############################################################################################
-	  
 # Input parameters
-Folder = "linsweep_202505272242"
+Folder = "side_202509041902"#linsweep_202505272242"
 dataPath = f"./DATA/{Folder}/" 
 
-F_range = np.array([0.2,0.4,0.6,0.8,1.0,1.2])
-T_range = np.array([5,7,9,11,13,15])
-V_range = np.array([1,2,3])
+F_range = np.array([1.0])#0.004])#np.array([0.2,0.4,0.6,0.8,1.0,1.2])
+T_range = np.array([10])#2.1]) #np.array([5,7,9,11,13,15])
+V_range = np.array([1])#,2,3])
 
 epsilon_lh = 0.2
 epsilon_rh = 5.0
@@ -255,24 +179,11 @@ Es = np.zeros([len(F_range),len(T_range),len(V_range)])
 Rs = np.zeros([len(F_range),len(T_range),len(V_range)])
 As = np.zeros([len(F_range),len(T_range),len(V_range)])
 
-
-option = 2
-
-if option == 0:
-	xOption = "R" 
-	yOption = "E" 
-elif option == 1:
-	xOption = "R" 
-	yOption = "A" 
-elif option == 2:
-	xOption = "E" 
-	yOption = "A" 
-
 for i,F in enumerate(F_range):
 	for j,T in enumerate(T_range):
 		for k,V in enumerate(V_range):
 
-			subFolder = f"F_{F}_T_{T}_V_{V:03d}"
+			subFolder = f"F_{F}_T_{T}_a_0.15_b_0"
 
 			input_file = f"{dataPath}{subFolder}/data.npz"
 			data = np.load(input_file)
@@ -291,96 +202,19 @@ for i,F in enumerate(F_range):
 			print(f"{Es[i,j,k]:.3f} {Rs[i,j,k]} {As[i,j,k]:.3f}")
 
 
-# Setup marker and color maps
-marker_styles = ['o', 's', '^', 'D', 'v', 'P', '*']
-F_to_marker = {f: marker_styles[i % len(marker_styles)] for i, f in enumerate(F_range)}
+with open("./Results/all_simulations_side.txt", "w") as f:
+	f.write("F\tT\tV\tA\tR\tE\n")
+	for i, F in enumerate(F_range):
+		for j, T in enumerate(T_range):
+			for k, V in enumerate(V_range):
+				f.write(f"{F:.2f}\t{T}\t{V}\t{As[i,j,k]:.6f}\t{Rs[i,j,k]:.6f}\t{Es[i,j,k]:.6f}\n")
 
-# Normalize T for colormap
-T_norm = plt.Normalize(vmin=T_range.min(), vmax=T_range.max())
-cmap = plt.cm.viridis
+As_mean = As.mean(axis=2)
+Rs_mean = Rs.mean(axis=2)
+Es_mean = Es.mean(axis=2)
 
-# Precompute data
-Es_plot = np.mean(Es, axis=2)
-Rs_plot = np.mean(Rs, axis=2)
-As_plot = np.mean(As, axis=2)
-
-for i, F in enumerate(F_range):
-	for j, T in enumerate(T_range):
-		color = cmap(T_norm(T))
-		marker = F_to_marker[F]
-		if option == 0:
-			ax.scatter(Rs_plot[i, j], Es_plot[i, j], color=color, marker=marker,
-					  edgecolor='black', linewidth=0.5,s=8,zorder=3)
-		elif option == 1:
-			ax.scatter(Rs_plot[i, j], As_plot[i, j], color=color, marker=marker,
-					  edgecolor='black', linewidth=0.5,s=8,zorder=3)
-		elif option == 2:
-			ax.scatter(Es_plot[i, j], As_plot[i, j], color=color, marker=marker,
-					  edgecolor='black', linewidth=0.5,s=8,zorder=3)
-
-for j, T in enumerate(T_range):
-	color = cmap(T_norm(T))
-	marker = F_to_marker[F]
-	if option == 0:
-		ax.plot(Rs_plot[:, j], Es_plot[:, j], color=color,
-					linewidth=1.0)
-	elif option == 1:
-		ax.plot(Rs_plot[:, j], As_plot[:, j], color=color,
-					linewidth=1.0)
-	elif option == 2:
-		ax.plot(Es_plot[:, j], As_plot[:, j], color=color,
-					linewidth=1.0)
-
-
-##########################################
-# Final Lay-out
-##########################################
-
-# Final adjustments to the figure
-plotlib.set_box(ax)
-
-# Axis labels
-ax.set_xlabel(xOption)
-ax.set_ylabel(yOption)
-
-if option == 0:
-	ax.set_xlim([0,50])
-	ax.set_ylim([0,350])
-	ax.xaxis.set_major_locator(MultipleLocator(10))
-	ax.xaxis.set_minor_locator(MultipleLocator(2))
-	ax.yaxis.set_major_locator(MultipleLocator(100))
-	ax.yaxis.set_minor_locator(MultipleLocator(20))
-elif option == 1:
-	ax.set_xlim([0,50])
-	ax.set_ylim([0.40,0.80])
-	ax.xaxis.set_major_locator(MultipleLocator(10))
-	ax.xaxis.set_minor_locator(MultipleLocator(2))
-	ax.yaxis.set_major_locator(MultipleLocator(0.10))
-	ax.yaxis.set_minor_locator(MultipleLocator(0.02))
-elif option == 2:
-	ax.set_xlim([0,350])
-	ax.set_ylim([0.40,0.80])
-	ax.xaxis.set_major_locator(MultipleLocator(100))
-	ax.xaxis.set_minor_locator(MultipleLocator(20))
-	ax.yaxis.set_major_locator(MultipleLocator(0.10))
-	ax.yaxis.set_minor_locator(MultipleLocator(0.02))
-
-plotlib.set_position(ax,x=0.20, y=0.18, width=.70, height=0.70)
-
-# Save the figure
-plt.savefig(f"functionality_correlation_{xOption}{yOption}_new.pdf")
-plt.show()
-
-
-# # Add colorbar for T
-# sm = plt.cm.ScalarMappable(norm=T_norm, cmap=cmap)
-# sm.set_array([])
-# cbar = fig.colorbar(sm, ax=ax, orientation='vertical', fraction=0.02, pad=0.04)
-# cbar.set_label("T")
-
-# # Add marker legend for F
-# handles = [plt.Line2D([0], [0], marker=marker, color='w',
-# 					  markerfacecolor='gray', markeredgecolor='black',
-# 					  markersize=10, label=f"Q={f:.2f}")
-# 		   for f, marker in F_to_marker.items()]
-# fig.legend(handles=handles, loc='lower center', ncol=len(F_range), frameon=False)
+with open("./Results/averaged_simulations_side.txt", "w") as f:
+	f.write("F\tT\tA\tR\tE\n")
+	for i, F in enumerate(F_range):
+		for j, T in enumerate(T_range):
+			f.write(f"{F:.2f}\t{T}\t{As_mean[i,j]:.6f}\t{Rs_mean[i,j]:.6f}\t{Es_mean[i,j]:.6f}\n")

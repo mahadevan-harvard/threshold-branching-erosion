@@ -7,6 +7,8 @@ from skimage.morphology import remove_small_objects
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
 
+from matplotlib.ticker import MultipleLocator
+
 import PlotLibrary as plotlib
 
 def remove_isolated_islands(image, min_size=1):
@@ -42,7 +44,7 @@ def remove_isolated_islands(image, min_size=1):
 # Plot Figure settings
 figSpecs = plotlib.FigureSettings()
 figSpecs.set_journal('PhysicalReview')
-figSpecs.set_figureHeight(86)
+figSpecs.set_figureHeight(30)
 
 # What is the size of this figure relative to the journal specs
 xFraction = 1.0
@@ -60,41 +62,29 @@ ax = plt.subplot()
 ##########################################
 # Retrieve data
 ##########################################
-config = "linsweep_202509081026"#"homogeneous_202505141618"#"homogeneous_202505141555"
-#config = "homogeneous_202505141555"
-Q = 0.3 #0.05, 0.5, 1.0, 2.0, 5.0
-T = 10.0
+config = "linsweep_202508141727"
+
+Q = 5.0 #0.05, 0.5, 1.0, 2.0, 5.0
+T = 100.0
 V = 1
-input_file = f'./DATA/{config}/F_{Q}_T_{T}_V_{V:03d}/data_obstacle.npz'
-#input_file = f'./DATA/erosion/{config}/F_{Q:g}_T_{T:.1f}_V_001/data.npz'
-output_file = f'./Results/{config}_E_F_{Q:g}_T_{T:g}_V_{V:03d}.png'
+input_file = f'./DATA/{config}/F_{Q}_T_{T}_V_{V:03d}/data.npz'
+output_file = f'./Results/{config}_E_F_{Q:g}_T_{T:g}_V_{V:03d}_cbar.pdf'
 data = np.load(input_file)
 
 savior = data["phi"]
-
-phi0 = savior[0]
-#phi_array = savior[9]
 phi_array = savior[-1]
 
-#ax.imshow(np.rot90(phi0 - phi_array),cmap="Reds",vmin=0,vmax=0.02)
-ax.imshow(np.rot90(phi_array),cmap="viridis",vmin=0.0,vmax=1.0)
+bounds = [0.0, 0.5, 0.75, 1.0]
+norm = Normalize(vmin=0, vmax=1)
+sm = ScalarMappable(norm=norm, cmap=cmap)
 
+im_fig, im_ax = plt.subplots()
+im = im_ax.imshow(np.rot90(phi_array), cmap="viridis", vmin=0.0, vmax=1.0)
+plt.close(im_fig)  # We don't need to display this figure
 
 print(np.min(phi_array), np.max(phi_array))
 
-savior = data["flux"]
-flux_array = np.log10(savior[-1])
-#ax.imshow(np.rot90(flux_array),cmap="magma",vmin=-4,vmax=0)
-
-
-
-# flux_array = savior[-1]
-# flux_array = flux_array - np.min(flux_array)
-# print(np.min(flux_array))
-# print(np.max(flux_array))
-
-# ax.imshow(np.rot90(flux_array),cmap='magma',vmin=0,vmax=5.0)
-
+cbar = fig.colorbar(sm, ax=ax, label=r"$\phi$", orientation="vertical")
 
 ##########################################
 # Final Lay-out
@@ -104,7 +94,9 @@ ax.set_aspect('equal', adjustable='datalim')
 ax.axis("off")
 fig.patch.set_facecolor([0,0,0,0])
 
+cbar.ax.yaxis.set_major_locator(MultipleLocator(1.0))
+
 # Adjust the figure's position
-plotlib.set_position(ax, x=0, y=0, width=1.0, height=1.0)
+plotlib.set_position(ax, x=.0, y=2.5/30, width=1.0, height=24/30)
 fig.savefig(output_file, dpi=600)
 plt.show()

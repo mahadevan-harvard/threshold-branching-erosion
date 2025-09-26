@@ -24,14 +24,7 @@ from datetime import datetime
 class BoundaryFluxSide:
 	def __init__(self, F, T, a, b, config):
 		"""
-		Initialize the ramp-up boundary flux class.
-		
-		Parameters:
-		- t_rampup: Ramp-up time constant
-		- q_max_lh: Maximum flux on the left boundary
-		- q_max_rh: Maximum flux on the right boundary
-		- config: Configuration object with `n` (grid size) and other parameters
-		- a: Power factor for ramp-up scaling
+		Initialize the ramp-up boundary flux class for a modulated side sink
 		"""
 		bx = config.grid_spacing*config.nx
 		q_max_lh = F/(2*config.epsilon_lh)
@@ -72,7 +65,7 @@ class BoundaryFluxSide:
 		elif t/self.t_rampup < 1.0:	
 			factor_in = t/self.t_rampup			
 			factor_out = factor_in
-			factor_out_side = 0.0 #(1-self.b)*factor_in - self.b*(t/(self.t_rampup*self.a) - 1)*factor_in												
+			factor_out_side = 0.0											
 		else:
 			factor_in = 1.0
 			factor_out = 1.0			
@@ -84,14 +77,7 @@ class BoundaryFluxSide:
 		dq3 = +self.q_max_lh * factor_in * np.ones((self.config.nx + 1, self.config.ny + 1))  # Left boundary flux
 		dq4 = -self.q_max_rh * factor_out * np.ones((self.config.nx + 1, self.config.ny + 1))  # Right boundary flux
 
-		# print(self.q_max_side * factor_out_side * 2 *  bx)
-		# print(self.q_max_rh * factor_out * 2 * epsilon_rh)
-		# print(self.q_max_side * factor_out_side * 2 *  bx + self.q_max_rh * factor_out * 2 * epsilon_rh)
-		# print(self.q_max_lh * factor_in * 2 *  epsilon_lh)
-		# print("\n")
-
 		return dq1, dq2, dq3, dq4, self.dq5, self.dq6
-
 
 #########################################################################################
 #   MAIN BODY
@@ -100,7 +86,7 @@ class BoundaryFluxSide:
 if __name__ == "__main__":
 
 	# PARAMETERS
-	nx = 250                 # Specify grid size to be n x n. # Might want to change to nx and ny
+	nx = 250                 # Specify grid size to be n x n.
 	bx = 10                 # Boundary length of quadratic domain, so the domain will have shape [0,bx] x [0,bx].
 	grid_spacing = bx/nx
 
@@ -116,7 +102,7 @@ if __name__ == "__main__":
 
 	xi = 0.025               # communication length (mechancics)
 	omega = 8               # threshold sharpness
-	varphi_star = 0.8          # threshold transition point -> Is this not per definition the same as phi_0 for a stable config?
+	varphi_star = 0.8          # threshold transition point
 	
 	t_final = 25           # Simulation time
 	save_dt = 0.125
@@ -142,7 +128,7 @@ if __name__ == "__main__":
 	domain = dx.mesh.create_rectangle(MPI.COMM_WORLD, [np.array([0, 0]), np.array([bx, by])], [nx, ny], dx.mesh.CellType.quadrilateral)
 	V = dx.fem.functionspace(domain, ("Lagrange", 1))
 
-	# Generate indices for transformation from 2D nump array to vector -> must be possible to do this in a more transpartent way 
+	# Generate indices for transformation from 2D nump array to vector
 	coords = domain.geometry.x[:,:2]
 	indices = np.lexsort((coords[:,1], coords[:,0]))  
 
@@ -152,7 +138,7 @@ if __name__ == "__main__":
 	config = fb.FEMConfig(V, s, ds, nx, ny, grid_spacing, indices, epsilon_lh, epsilon_rh)
 
 	# INITIALIZE PHI
-	seed = 42
+	seed = 486522830 #int(time.time() * 1e6) % (2**32) # Either hard-code or based on current time
 	phi0 = fb.generate_phi0(phi_0, sigma_phi, zeta, config, seed=seed)
 
 	# PARAMETER_SWEEP
