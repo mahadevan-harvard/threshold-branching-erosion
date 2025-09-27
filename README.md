@@ -2,6 +2,18 @@
 
 Simulates flow-driven branching through threshold-based erosion of a porous medium.
 
+This code accompanies the paper:
+
+> *Self-organized adaptive branching in frangible matter,*  
+> P.L.B. Fischer/J. Tauber, T. Koch, L. mahadevan  
+> [TBD].
+
+and is based on:
+
+> *Flow-Driven Branching in a Frangible Porous Medium,*  
+> N.J. Derr, D.C. Fronk, C.A. Weber, A. Mahadevan, C.H. Rycroft, L. Mahadevan,  
+> *Phys. Rev. Lett.* **125**, 158002 (2020). 
+
 ## Installation
 
 This project uses Python 3 with fenicsx, installation through conda is recommended.
@@ -63,3 +75,5 @@ The log file contains:
 - `erate` – spatial average erosion rate  
 
 The analysis scripts in `analysis/` operate directly on this output folder structure.
+
+For theoretical background, model derivations, and further implementation details, please refer to the papers cited above.
