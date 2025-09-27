@@ -16,7 +16,7 @@ figSpecs.set_journal('PhysicalReview')
 figSpecs.set_figureHeight(55)
 
 # What is the size of this figure relative to the journal specs
-xFraction = 1/3 #1.0
+xFraction = 1/3
 yFraction = 1.0
 
 width = xFraction*figSpecs.doubleColumn
@@ -58,7 +58,7 @@ def simple_cull_with_mask(Y, tol=1e-8):
 				dominated = True
 				break
 		if dominated:
-			is_pareto[idx] = False   # <-- important
+			is_pareto[idx] = False 
 		else:
 			for i in reversed(to_remove):
 				is_pareto[P_idx[i]] = False
@@ -73,7 +73,6 @@ def simple_cull_with_mask(Y, tol=1e-8):
 ##############################################################################################
 
 # Input parameters
-#Folder = "linsweep_202507281142"
 dataPath = f"./Results/all_simulations_folder.txt"
 
 data = np.genfromtxt(dataPath,skip_header=1)
@@ -110,7 +109,6 @@ tree = cKDTree(Y[is_pareto])  # Pareto points in 3D
 d_p,_ = tree.query(Y)  # Distance of all points to closest Pareto point
 d_p_norm = d_p / np.mean(d_p)
 
-#Folder = "linsweep_202507281142"
 dataPath = f"./Results/all_simulations_side.txt"
 
 data = np.genfromtxt(dataPath,skip_header=1, ndmin=2)
@@ -124,7 +122,6 @@ A_side_scaled = (A_side - A.mean()) / A.std()
 R_side_scaled = (R_side - R.mean()) / R.std()
 E_side_scaled = (E_side - E.mean()) / E.std()
 
-#Folder = "linsweep_202507281142"
 dataPath = f"./Results/all_simulations_exp.txt"
 
 data = np.genfromtxt(dataPath,skip_header=1, ndmin=2)
@@ -160,9 +157,7 @@ E_org_scaled = (E_org - E.mean()) / E.std()
 plotlib.set_box(ax)
 plotlib.set_position(ax,x=0.15, y=0.15, width=.80, height=0.80)
 
-# leg = plotlib.set_legend(ax,pos=2)
-
-mode = "AR" # "AE", "RE"
+mode = "AR"
 high_idx = 46 # index of high robustness simulation
 low_idx = 220 # index of low robustness simulation
 
@@ -175,7 +170,6 @@ scaled_F = (logF - np.min(logF))/(np.max(logF)-np.min(logF))
 colors = np.zeros([len(logT),3])
 colors[:,1] = scaled_T
 colors[:,2] = scaled_F
-#colors[is_pareto,2] = 1.0
 
 if mode == "AR":
 	ax.scatter(A_scaled[high_idx], R_scaled[high_idx], facecolor='darkorange', marker="^",alpha=1,zorder=10, linewidth=1,color="k",s=20)

@@ -185,6 +185,7 @@ if __name__ == "__main__":
 
 	# add obstacle
 	setter_function = CenterRectangle(width=obstacle_width, height=obstacle_height)
+#	setter_function = CenterCircle(radius=75)
 	phi0 = setter_function(phi0)
 
 	# Start simulation

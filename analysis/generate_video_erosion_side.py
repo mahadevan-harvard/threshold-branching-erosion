@@ -88,10 +88,8 @@ def create_flux_video(input_file, output_file, vmin, vmax):
     cmap.set_under('k')
 
     # Normalize with boundaries
-    norm = mcolors.Normalize(vmin=vmin, vmax=vmax)#, clip=False) #
-#    norm = mcolors.Normalize(vmin=0, vmax=2)#, clip=False) #
-
-
+    norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
+    
     # Iterate over each simulation step
     for step in range(num_steps):
 
@@ -120,8 +118,6 @@ def create_flux_video(input_file, output_file, vmin, vmax):
     imageio.mimsave(output_file, images, fps=24, format='FFMPEG')
     print(f'Video saved as {output_file}')
 
-
-
 # Load data from the .npz file
 config = "side_202505261451"
 Q = 1.0 
@@ -129,42 +125,10 @@ T = 10.0
 a = 0.15
 
 # config = "exponeital_202505261448"
-# Q = 0.004#1.0 
-# T = 2.1#10.0
-# a = 18.5#0.15
+# Q = 0.004
+# T = 2.1
+# a = 18.5
 
 input_file = f'./DATA/{config}/F_{Q:.1f}_T_{T:g}_a_{a:g}_b_0/data.npz'
-#input_file = f'./DATA/erosion/{config}/F_{Q:g}_T_{T:.1f}_V_001/data.npz'
 output_file = f'./Results/{config}_E_F_{Q:g}_T_{T:g}_a_{a:g}_b_0.mp4'
 create_phi_video(input_file, output_file)
-
-# output_file = f'./Results/{config}_E_F_{Q:g}_T_{T:g}_V_001_flux.mp4'
-# create_flux_video(input_file, output_file,vmin=-3,vmax=0.3)
-
-
-# data = np.load(input_file)
-
-# savior = data["array"]
-
-# # List to store the frames
-# images = []
-
-# # Iterate over the arrays in 'savior'
-# for i, phi_array in enumerate(savior):
-#     if i % 1 == 0:  # No need for np.mod, use Python's modulo
-#         plt.figure()
-#         plt.imshow(np.rot90(phi_array), vmin=0, vmax=1)
-#         plt.xticks([])
-#         plt.yticks([])
-#         plt.gca().set_xticks([])  # Remove x-ticks
-#         plt.gca().set_yticks([])  # Remove y-ticks
-
-#         # Save the current figure as an image in memory
-#         plt.savefig('temp_frame.png', bbox_inches='tight', pad_inches=0)
-#         plt.close()
-
-#         # Read the saved image using ImageIO v3 syntax and append to list
-#         images.append(iio.imread('temp_frame.png'))
-
-# # Save the list of images as a video using ImageIO v3
-# iio.imwrite(output_file, images, fps=5)

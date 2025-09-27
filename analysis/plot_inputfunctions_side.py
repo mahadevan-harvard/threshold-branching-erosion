@@ -1,18 +1,12 @@
-import sys
-
 import numpy as np
-import os
-import datetime
 
-from scipy.optimize import curve_fit
 
 import matplotlib.pyplot as plt
 import matplotlib
 
 import PlotLibrary as plotlib
 
-from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
-                               AutoMinorLocator, LogLocator)
+from matplotlib.ticker import (MultipleLocator)
 
 
 cmap = matplotlib.colormaps['Greys']
@@ -67,41 +61,28 @@ factor_in = t/t_rampup
 factor_sink[mask] = b*factor_in[mask]
 factor_outside[mask] = (1-b)*factor_in[mask]
 
-Q = F*factor_sink#*q_max_rh
-Q_side = F*factor_outside#*q_max_side											
-
-
+Q = F*factor_sink
+Q_side = F*factor_outside										
 
 ax.plot(t,Q,label=f"sink",c="C02",lw=1)
-#ax.plot(t,np.cumsum(Q)*0.01,ls=":",c="C00")
-
 ax.plot(t,Q_side,label=f"side",c="C04",lw=1)
-#ax.plot(t,np.cumsum(Q_side)*0.01,ls=":",c="C01")
-
 
 Q_sum = Q + Q_side
-
-#ax.plot(t,Q_sum,label=f"linear",c="C01",zorder=0,lw=1)
-
 
 ######################################################################
 # Final layout settings
 ######################################################################
-
 
 # Final adjustments to the figure
 plotlib.set_box(ax)
 
 ax.set_xlabel(r'$t$',labelpad=-1.5)
 ax.set_ylabel(r'$Q$')
-#ax.set_ylabel(r'$E_{tot}$')
 
-
-ax.set_xlim([0,15]) #20
+ax.set_xlim([0,15])
 ax.set_ylim([-0.25,1.50])
 
 leg = plotlib.set_legend(ax,pos=4)
-#leg.set_title("$\Delta t$:")
 ax.xaxis.set_major_locator(MultipleLocator(5))
 ax.xaxis.set_minor_locator(MultipleLocator(1))
 ax.yaxis.set_major_locator(MultipleLocator(1))

@@ -42,20 +42,6 @@ def remove_isolated_islands(binary_image, min_size=1):
 
 	return cleaned_image
 
-# Curve shape depends quite a bit on fixed or non-fixed threshold, as well as the value of the threshols
-# Double check why hole count is sometimes quite high, is it correcting for pixel size holes?
-# def count_holes(phi_array,a):
-# 	phi = np.copy(phi_array)
-# 	phi[phi < a] = 0
-# 	phi[phi > a] = 1
-
-# 	phi = 1 - phi
-# 	phi = remove_isolated_islands(phi)
-	
-# 	_, num_islands = ndi.label(1-phi)
-
-# 	return num_islands
-
 def count_holes(phi_array, a, min_size=10):
 
 	# Threshold and invert
@@ -164,12 +150,12 @@ def extract_parameters(parameter_file, keys, default_values=None):
 ##############################################################################################
 
 # Input parameters
-Folder = "side_202509041902"#linsweep_202505272242"
+Folder = "side_202509041902"
 dataPath = f"./DATA/{Folder}/" 
 
-F_range = np.array([1.0])#0.004])#np.array([0.2,0.4,0.6,0.8,1.0,1.2])
-T_range = np.array([10])#2.1]) #np.array([5,7,9,11,13,15])
-V_range = np.array([1])#,2,3])
+F_range = np.array([1.0])
+T_range = np.array([10])
+V_range = np.array([1])
 
 epsilon_lh = 0.2
 epsilon_rh = 5.0
@@ -188,7 +174,7 @@ for i,F in enumerate(F_range):
 			input_file = f"{dataPath}{subFolder}/data.npz"
 			data = np.load(input_file)
 
-			phi_array = data["phi"][-1] # np.load(f'{dataPath}phi_' + run + '.npy')
+			phi_array = data["phi"][-1]
 			n = np.shape(phi_array)[1]
 			bx = 10
 

@@ -1,5 +1,6 @@
-import sys
-import os
+"""
+N.B. Requires fenicsx
+"""
 
 import numpy as np
 
@@ -10,7 +11,6 @@ from scipy.optimize import curve_fit
 from skimage import measure
 from skimage import morphology
 
-#import FrangibleBranching_Pressure as fb
 from erosion import simulate as fb
 
 import matplotlib.pyplot as plt
@@ -18,10 +18,7 @@ import matplotlib
 
 import PlotLibrary as plotlib
 
-from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
-                               AutoMinorLocator, LogLocator)
-
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.ticker import (MultipleLocator,)
 
 cmap = matplotlib.colormaps['Greys']
 
@@ -259,25 +256,19 @@ if __name__ == "__main__":
 	subFolder_low = f"F_1.4_T_100.0_V_001"
 	input_file = f"{dataPath}{subFolder_low}/data.npz"
 	data = np.load(input_file)
-	phi_min = data["phi"][-1] # np.load(f'{dataPath}phi_' + run + '.npy')
+	phi_min = data["phi"][-1]
 
 	subFolder_high = f"F_0.8_T_9_V_001"
 	input_file = f"{dataPath}{subFolder_high}/data.npz"
 	data = np.load(input_file)
-	phi_max = data["phi"][-1] # np.load(f'{dataPath}phi_' + run + '.npy')
+	phi_max = data["phi"][-1]
 
 	############################
 	# Robustness part
 	############################
 
-	# phi_min, j_min, E_min = robustness_test(np.copy(phi_min),epsilon_lh_min, epsilon_rh_min,blockages=0)
-	# phi_plot = phi_min
-	# j_plot = j_min
-
 	phi_min, j_min, E_min = robustness_test(np.copy(phi_min),epsilon_lh, epsilon_rh,blockages=10)
 	phi_max, j_max, E_max = robustness_test(np.copy(phi_max),epsilon_lh, epsilon_rh,blockages=10)
-
-
 
 	def decay_func(t, A, tau, C):
 		return A * np.exp(-t / tau) + C
@@ -296,7 +287,7 @@ if __name__ == "__main__":
 	box_area_rel = box_area / n**2 
 	print(box_area_rel)
 
-	t = blockages#*box_area_rel
+	t = blockages
 	min_norm = passage_min/passage_min[0]
 	max_norm = passage_max/passage_max[0]
 
@@ -311,20 +302,12 @@ if __name__ == "__main__":
 	ax.plot(t, decay_func(t, A_fit, tau_fit, C_fit), label=f"Fit: tau={tau_fit:.2f}", color="darkorange",lw=1.0,zorder=0)
 
 
-	# # Annotate each cell with the value
-	# for i in range(Rs_plot.shape[0]):
-	#     for j in range(Rs_plot.shape[1]):
-	#         ax.text(Ts_plot[i,j], Fs_plot[i,j], f"{Rs_plot[i, j]:.1f}",
-	#                 ha='center', va='center', color='k')
-
-
 	######################################################################
 	# Final layout settings
 	######################################################################
 
 	# Final adjustments to the figure
 	plotlib.set_box(ax)
-	#plotlib.set_box(cbar.ax)
 
 	ax.set_xlabel(r'$N_{\text{blocks}}$')
 	ax.set_ylabel(r'$E/E_0$')
@@ -338,13 +321,7 @@ if __name__ == "__main__":
 	ax.yaxis.set_major_locator(MultipleLocator(0.5))
 	ax.yaxis.set_minor_locator(MultipleLocator(0.1))
 
-	hfrac = 8.0/30
-	frac = 1 - hfrac - 3.5/30
-
 	plotlib.set_position(ax,x=0.26, y=0.25, width=.70, height=0.70)
-	#plotlib.set_position(ax,x=0.26, y=hfrac, width=.70, height=frac)
-
-
 
 	# Save the figure
 	fig.savefig('./Robustness.pdf')

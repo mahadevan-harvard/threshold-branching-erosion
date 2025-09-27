@@ -1,13 +1,15 @@
+"""
+N.B. This code requires fenicsx
+"""
+
 import numpy as np
 
 import scipy.ndimage as ndi
 from scipy.optimize import minimize_scalar
-from scipy.signal import fftconvolve
 
 from skimage import measure
 from skimage import morphology
 
-#import FrangibleBranching_Pressure as fb
 from erosion import simulate as fb
 
 import matplotlib.pyplot as plt
@@ -79,8 +81,6 @@ def maxhole(phi_array):
 
 def efficiency_ce(phi_array, p, dpdx, dpdy, bx, deltaP):
 	phi = np.clip(phi_array,a_min=0.1,a_max=1)
-	# I want to calculate the conductivity.
-	# q*L/ \Delta P
 	q = np.sum((-fb.kappa(phi)* dpdy)[:,-1]) # Sum the flux at the linesink
 	K = q/deltaP
 	return K
@@ -152,7 +152,6 @@ def locate_channels(phi_array): # in-use
 	"""
 	Finds channels
 	"""
-
 	result = minimize_scalar(lambda a: -count_holes(phi_array,a), bounds=(0, 0.5), method='bounded')
 	x_max = result.x
 	maxnum = count_holes(phi_array,x_max)
@@ -228,12 +227,12 @@ if __name__ == "__main__":
 	subFolder_low = f"F_1.4_T_100.0_V_001"
 	input_file = f"{dataPath}{subFolder_low}/data.npz"
 	data = np.load(input_file)
-	phi_min = data["phi"][-1] # np.load(f'{dataPath}phi_' + run + '.npy')
+	phi_min = data["phi"][-1]
 
 	subFolder_high = f"F_0.8_T_9_V_001"
 	input_file = f"{dataPath}{subFolder_high}/data.npz"
 	data = np.load(input_file)
-	phi_max = data["phi"][-1] # np.load(f'{dataPath}phi_' + run + '.npy')
+	phi_max = data["phi"][-1]
 
 	############################
 	# Robustness part

@@ -13,7 +13,6 @@ from erosion import simulate as fb
 # FUNCTIONS 
 ##############################################################################################
 
-
 #Code for robustness
 def remove_isolated_islands(binary_image, min_size=1):
 	# Ensure binary_image is a numpy array of type boolean
@@ -43,20 +42,6 @@ def remove_isolated_islands(binary_image, min_size=1):
 		cleaned_image = morphology.remove_small_objects(cleaned_image, min_size=min_size)
 
 	return cleaned_image
-
-# Curve shape depends quite a bit on fixed or non-fixed threshold, as well as the value of the threshols
-# Double check why hole count is sometimes quite high, is it correcting for pixel size holes?
-# def count_holes(phi_array,a):
-# 	phi = np.copy(phi_array)
-# 	phi[phi < a] = 0
-# 	phi[phi > a] = 1
-
-# 	phi = 1 - phi
-# 	phi = remove_isolated_islands(phi)
-	
-# 	_, num_islands = ndi.label(1-phi)
-
-# 	return num_islands
 
 def count_holes(phi_array, a, min_size=10):
 
@@ -166,7 +151,7 @@ def extract_parameters(parameter_file, keys, default_values=None):
 ##############################################################################################
 
 # Input parameters
-Folder = "linsweep_202507281142"#"linsweep_202507281142"
+Folder = "linsweep_202507281142"
 dataPath = f"./DATA/{Folder}/" 
 
 subfolders = [
@@ -196,7 +181,7 @@ for subFolder in subfolders:
 	input_file = f"{dataPath}{subFolder}/data.npz"
 	data = np.load(input_file)
 
-	phi_array = data["phi"][-1] # np.load(f'{dataPath}phi_' + run + '.npy')
+	phi_array = data["phi"][-1]
 	n = np.shape(phi_array)[1]
 	bx = 10
 

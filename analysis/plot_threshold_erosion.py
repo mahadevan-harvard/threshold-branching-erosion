@@ -1,18 +1,11 @@
-import sys
-
 import numpy as np
-import os
-import datetime
 
-from scipy.optimize import curve_fit
 
 import matplotlib.pyplot as plt
 import matplotlib
 
 import PlotLibrary as plotlib
 
-from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
-                               AutoMinorLocator, LogLocator)
 
 from matplotlib.colors import LinearSegmentedColormap
 cmap = matplotlib.colormaps['Greys']
@@ -99,7 +92,5 @@ plotlib.set_position(ax,x=0.15,y=hfrac,width=wfrac,height=frac)
 
 # Save the figure
 fig.savefig('./threshold_erosion.pdf')
-
-#fig.savefig('11032024e.pdf', bbox_inches='tight', pad_inches=0)
 
 plt.show()

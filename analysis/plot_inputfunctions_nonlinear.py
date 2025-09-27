@@ -1,19 +1,11 @@
-import sys
-#sys.path.insert(0, '/media/justin/Data/OneDrive/Documenten/Research/Projects/PD_Harvard/PD_OptimalBranching/Figures')
-
 import numpy as np
-import os
-import datetime
-
-from scipy.optimize import curve_fit
 
 import matplotlib.pyplot as plt
 import matplotlib
 
 import PlotLibrary as plotlib
 
-from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
-                               AutoMinorLocator, LogLocator)
+from matplotlib.ticker import (MultipleLocator)
 
 
 cmap = matplotlib.colormaps['Greys']
@@ -96,21 +88,11 @@ for i, t_i in enumerate(t):
 
 Q = F*factor
 ax.plot(t,Q,label=f"non-linear",c="C02",lw=1)
-#ax.plot(t,np.cumsum(Q)*dt,ls=":",c="C02")
-
 
 t_rampup = 9
 F = 1.2
 
 Q_ramp = F*np.where(t/t_rampup < 1.0, t/t_rampup,1) 
-
-#ax.plot(t,Q_ramp,label=f"{t_rampup}", c="C01", zorder=0,lw=1)
-# ax.plot(t,np.cumsum(Q_ramp)*dt,ls=":",c="C01")
-
-#ax.vlines(t_rampup,0, 10,color="lightgrey")
-
-
-
 
 ######################################################################
 # Final layout settings
@@ -123,11 +105,10 @@ plotlib.set_box(ax)
 ax.set_xlabel(r'$t$',labelpad=-1.5)
 ax.set_ylabel(r'$Q$')
 
-ax.set_xlim([0,25]) #20
+ax.set_xlim([0,25])
 ax.set_ylim([-5,30])
 
 leg = plotlib.set_legend(ax,pos=4)
-#leg.set_title("$\Delta t$:")
 ax.xaxis.set_major_locator(MultipleLocator(5))
 ax.xaxis.set_minor_locator(MultipleLocator(1))
 ax.yaxis.set_major_locator(MultipleLocator(10))
