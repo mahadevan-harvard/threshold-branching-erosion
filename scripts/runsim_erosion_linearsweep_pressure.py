@@ -63,7 +63,7 @@ class BoundaryFlux:
 
 		# Boundary flux arrays
 		dq3 = +self.q_max_lh * factor * np.ones((self.config.nx + 1, self.config.ny + 1))  # Left boundary flux
-		dq4 = np.zeros((self.config.nx + 1, self.config.ny + 1))  # Right boundary flux
+		dq4 = np.zeros((self.config.nx + 1, self.config.ny + 1))  # Right boundary flux set to all zeros (will not be used)
 
 		return self.dq1, self.dq2, dq3, dq4, self.dq5, self.dq6
 
@@ -88,10 +88,10 @@ if __name__ == "__main__":
 	sigma_phi = 0.02        # variance of the Gaussian noise
 	zeta = 0.15             # correlation length (structural)
 
-	xi = 0.05               # communication length (mechancics)
+	xi = 0.025               # communication length (mechancics)
 	omega = 8               # threshold sharpness
 	varphi_star = 0.8       # threshold transition point 
-	t_final = 100           # Simulation time
+	t_final = 2000           # Simulation time
 	save_dt = 10.0
 
 	# Sweep parameters
@@ -127,7 +127,7 @@ if __name__ == "__main__":
 	for V in V_array:
 
 		# INITIALIZE PHI
-		seed = 42#int(time.time() * 1e6) % (2**32)
+		seed = 486522830 #int(time.time() * 1e6) % (2**32)
 		phi0 = fb.generate_phi0(phi_0, sigma_phi, zeta, config, seed=seed)
 
 		for F in F_array:

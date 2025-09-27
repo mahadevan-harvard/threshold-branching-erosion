@@ -277,7 +277,7 @@ def fem_initialize(phi, dq1, dq2, dq3, dq4, dq5, dq6, config):
 
 	config.bc1, config.bc2, config.bc3, config.bc4, config.bc5, config.bc6 = bcs
 
-	# Add Neumann boundary conditionss to L
+	# Add Neumann boundary conditions to L
 	ds_terms = [config.bc1, config.bc2, config.bc3, config.bc5, config.bc4, config.bc6]
 	ds_ids   = [1, 2, 3, 4, 5, 6]
 
@@ -557,7 +557,7 @@ def fem_initialize_pressure(phi, config):
 
 	L = - config.s * config.v * ufl.dx
 
-	# Note: this mode is basically neglecting that it is a point source, does that matter
+	# Note: this mode is adds 2 line sinks
 	config.bc1 = dx.fem.Constant(config.domain, dx.default_scalar_type(0))
 	config.bc2 = dx.fem.Constant(config.domain, dx.default_scalar_type(0))
 

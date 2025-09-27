@@ -24,9 +24,9 @@ ax = plt.subplot()
 ##########################################
 # Retrieve data
 ##########################################
-config = "linsweep_202509081026"
+config = "linsweeppressure_202509271359"
 
-Q = 0.3 
+Q = 0.5 
 T = 10.0
 V = 1
 input_file = f'./DATA/{config}/F_{Q}_T_{T}_V_{V:03d}/data.npz'
