@@ -72,6 +72,7 @@ class FEMConfig:
 		self.bc4 = None
 		self.bc5 = None
 		self.bc6 = None
+		self.bc_end = None      # Dirichlet BC (if used)
 
 class NeumannProblem:
 	def __init__(self, V, a_form, L_form, nullspace):
@@ -278,18 +279,40 @@ def fem_initialize(phi, dq1, dq2, dq3, dq4, dq5, dq6, config):
 	config.bc1, config.bc2, config.bc3, config.bc4, config.bc5, config.bc6 = bcs
 
 	# Add Neumann boundary conditions to L
-	ds_terms = [config.bc1, config.bc2, config.bc3, config.bc5, config.bc4, config.bc6]
-	ds_ids   = [1, 2, 3, 4, 5, 6]
+	if config.pressure_sink:
+		ds_terms = [config.bc1, config.bc2, config.bc3, config.bc4, config.bc6]
+		ds_ids   = [1, 2, 3, 5, 6]		
+	else:
+		ds_terms = [config.bc1, config.bc2, config.bc3, config.bc5, config.bc4, config.bc6]
+		ds_ids   = [1, 2, 3, 4, 5, 6]
 
 	for bc_func, tag in zip(ds_terms, ds_ids):
 		L += bc_func * config.v * config.ds(tag)
-			
-	# --- Assemble system ---
-	a_form = form(a)
-	L_form = form(L)
-	nullspace = PETSc.NullSpace().create(constant=True)
 
-	problem = NeumannProblem(config.V, a_form, L_form, nullspace)
+    # Set dirichlet boundary conditions (if present)
+	if config.pressure_sink:
+		bx = config.grid_spacing * config.nx
+		by = config.grid_spacing * config.ny
+		xL = bx/2 - config.epsilon_rh
+		xR = bx/2 + config.epsilon_rh
+
+		def boundary_dele_end(x):
+			return np.isclose(x[1], by) & (x[0] >= xL) & (x[0] <= xR)
+
+		boundary_dofs_end = dx.fem.locate_dofs_geometrical(config.V, boundary_dele_end)
+		p_bc_end = dx.fem.Function(config.V)
+		p_bc_end.interpolate(lambda x: 0.0 + 0*x[0])
+		bc_end = dx.fem.dirichletbc(p_bc_end, boundary_dofs_end)
+		config.bc_end = bc_end
+
+	# --- Assemble system ---
+	if config.pressure_sink:
+		problem = LinearProblem(a, L, bcs=[bc_end], petsc_options={"ksp_type": "cg", "pc_type": "hypre"})
+	else:
+		a_form = form(a)
+		L_form = form(L)
+		nullspace = PETSc.NullSpace().create(constant=True)
+		problem = NeumannProblem(config.V, a_form, L_form, nullspace)
 
 	return problem, config
 
@@ -309,13 +332,24 @@ def calculate_p(problem, phi, dq1, dq2, dq3, dq4, dq5, dq6, config):
 	for dq, bc in zip([dq1, dq2, dq3, dq4], [config.bc1, config.bc2, config.bc3, config.bc4]):
 		bc.x.array[:] = nptodx(dq, config.indices)
 
-	for bc, tag in zip(
-		[config.bc1, config.bc2, config.bc3, config.bc5, config.bc4, config.bc6],
-		[1, 2, 3, 4, 5, 6]):
-		L += bc * config.v * config.ds(tag)
+	# Add Neumann boundary conditions to L
+	if config.pressure_sink:
+		ds_terms = [config.bc1, config.bc2, config.bc3, config.bc4, config.bc6]
+		ds_ids   = [1, 2, 3, 5, 6]		
+	else:
+		ds_terms = [config.bc1, config.bc2, config.bc3, config.bc5, config.bc4, config.bc6]
+		ds_ids   = [1, 2, 3, 4, 5, 6]
 
-	problem.update_matrix(form(a))
-	problem.update_rhs(form(L))
+	for bc_func, tag in zip(ds_terms, ds_ids):
+		L += bc_func * config.v * config.ds(tag)
+
+	# Update the problem
+	if config.pressure_sink:
+		problem = dx.fem.petsc.LinearProblem(a, L, bcs=[config.bc_end], petsc_options={"ksp_type":"cg","pc_type":"hypre"})
+	else:
+		problem.update_matrix(form(a))
+		problem.update_rhs(form(L))
+	
 	result = problem.solve()
 
 	return result, problem, config

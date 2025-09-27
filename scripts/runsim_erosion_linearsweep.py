@@ -95,7 +95,7 @@ if __name__ == "__main__":
 	save_dt = 250
 
 	# Sweep parameters
-	F_array = np.array([0.3]) # Flux
+	F_array = np.array([0.5]) # Flux
 	T_array = np.array([10.0]) # Ramp-up time
 	V_array = np.array([1])
 
